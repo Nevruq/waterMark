@@ -3,12 +3,9 @@ import random
 
 from datasets import load_dataset
 
-ds = load_dataset("Hello-SimpleAI/HC3", "finance")
-
-# First 20 trainindata
-testData = ds["train"]
-randomData = random.sample(testData["human_answers"], 100)
-print(len(randomData))
+def load_datasetw():
+    ds = load_dataset("Hello-SimpleAI/HC3", "finance")
+    return ds
 
 def count_double_WP(testData):
     """Counts amout of double Whitespaces in a Dataset
@@ -22,6 +19,6 @@ def count_double_WP(testData):
             if len(token) == 2 and token[0].isspace() and token[1].isspace():
                 wp_count += 1
     return wp_count 
-countt = count_double_WP(randomData)
-print(countt)
-print(len(testData) / countt)
+
+if __name__ == "__main__":
+    print(count_double_WP(load_datasetw()["train"]["human_answers"]) / 3933)

@@ -1,33 +1,38 @@
-import Kirchenheimer
+import loadDataHugging as ldh
+import numpy as np
+import random
 
-model_name = "meta-llama/Llama-3.1-8B-Instruct"  # Beispiel (nimm ein verfügbares)
-tok = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
+import whiteSpaceDetector
 
-secret = b"my_super_secret_key_32bytes_min"   # sicher speichern
-gamma  = 0.5
-delta  = 2.5
+length_data = 5000
+key = "key"
 
-proc = WatermarkLogitsProcessor(
-    tokenizer=tok,
-    secret_key=secret,
-    gamma=gamma,
-    delta=delta,
-    green_exclude_ids=tok.all_special_ids
-)
-processors = LogitsProcessorList([proc])
+# load the data 
 
-prompt = "Explain the basics of symmetric and asymmetric encryption."
-inputs = tok(prompt, return_tensors="pt").to(model.device)
+ds = ldh.load_datasetw()["train"]["human_answers"]
 
-out = model.generate(
-    **inputs,
-    max_new_tokens=200,
-    temperature=1.0,
-    top_p=0.9,
-    do_sample=True,
-    logits_processor=processors
-)
+dtype = np.dtype([
+    ('id', np.int32),
+    ('text', object),   
+    ('label', np.bool_)
+])
+id = 0
+data = []
+for single_data in ds:
+    temp_data = (id, single_data, False)
+    if random.random() < 0.2:
+        # 20% of the data is gonna get watermarked
+        print(temp_data)
+        watermarked_text = whiteSpaceDetector.encode_whitespace_watermark(single_data[0],
+                                                                           key, 
+                                                                           gamma=0.5, 
+                                                                           contextFunktion=True)
+        temp_data = (id, watermarked_text, True)
+    data.append(temp_data)
 
-text = tok.decode(out[0], skip_special_tokens=True)
-print(text)
+data_np = np.array(data, dtype=dtype)
+print(len(ds))
+
+#list_data = np.array()
+
+
