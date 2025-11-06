@@ -1,1 +1,42 @@
-test
+z-score: Measurment to tell how many standard deviations a data point is off the mean.
+p-value:
+
+
+
+Ziel eines guten Watermarks:
+    - Zuverlässige Detection eines gewatermarkten Textes
+        - Selbst bei Veränderungen des Textes oder anaylse von Teilen desen
+    - Geringe veränderung des orginal Textes
+    - Integrität des Textes 
+        - Das Watermark sollte nicht einfach zu erkennen, verändern oder zu fälschen sein
+    - Informationen über das Watermark
+        - Codierung von Informationen zur Rückschließung auf Informationen
+            - Author / Organisation
+            - Model
+            - Nutzungszweck
+
+Frage: - Wie kann man effezient Informationen in einem Text embedden, sodass diese die obere Kriterien größtmöglich erfüllt
+        - Wie kann dies mit bereits genierten Texten gemacht werden
+
+Linguistische Watermarks: gezielte Variation von Synonymen, Satzlängen, Phrasenhäufigkeiten (statistisch erkennbar).
+
+Kryptografische Signaturen: Hash des Textes + privater Schlüssel → später per öffentlichem Schlüssel überprüfbar.
+
+Metadaten-basierte Watermarks: Einbettung in HTML, PDF oder DOCX-Metadaten.
+
+Steganografische Watermarks: Unsichtbare Zeichen (z. B. Unicode Zero Width Spaces) – leicht, aber anfällig für Entfernung.
+
+Ein gutes Watermark balanciert:
+
+    - Robustheit ↔ Unauffälligkeit
+
+    - Einfache Überprüfbarkeit ↔ Fälschungssicherheit
+
+    - Transparenz ↔ Datenschutz
+
+
+H. Zhang et al. (2025): Formalisierung als Hypothesentest mit klarer Aussage:
+→ Jedes Watermark hat ein Dilemma:
+
+    Entweder stark genug, um erkannt zu werden → leicht entfernbar,
+    oder schwach genug, um unauffällig zu bleiben → statistisch nicht nachweisbar.
