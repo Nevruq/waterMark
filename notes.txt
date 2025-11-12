@@ -40,3 +40,13 @@ H. Zhang et al. (2025): Formalisierung als Hypothesentest mit klarer Aussage:
 
     Entweder stark genug, um erkannt zu werden → leicht entfernbar,
     oder schwach genug, um unauffällig zu bleiben → statistisch nicht nachweisbar.
+
+
+
+MOMENTANE FRAGEN: Wie viele DoubleWP braucht man pro Character um eine Sucess vom Detekten von über 90% bekommt.
+
+
+Idee: Logits die Werte sehr nah beiander sind -> Synonymen ?? 
+    - Wenn ja könnte durch wahl des ersten oder anderen eventuell ein binärer Code eingebettet werden, jedoch muss immer das gleiche Modell benutzt werden
+        -Unwahrscheinlich, gleiche Logits sind nicht Synonyme
+    - Veränderung des Textes um semantische Intakthaltung zu erhalten cosine_similarity > 0.9

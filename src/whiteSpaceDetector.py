@@ -5,7 +5,6 @@ from typing import List, Tuple
 def split_tokens_and_ws(text: str) -> List[str]:
     """Zerlegt in abwechselnd Nicht-Whitespace und Whitespace-Blöcke."""
     split_tokens = re.findall(r"\S+|\s+", text)
-    print(split_tokens)
     return split_tokens
 
 def word_gaps(parts: List[str]) -> List[int]:
@@ -33,7 +32,6 @@ def prng_indices(n_gaps: int, gamma: float, key: str, context:str , contextFunkt
         seed = gen_seed_wContext(context, key)
     rnd = random.Random(seed)
     k = max(1, int(round(gamma * n_gaps)))
-    print(seed)
     return set(rnd.sample(range(n_gaps), k))  # Indizes 0..n_gaps-1
 
 
@@ -45,6 +43,18 @@ def gen_seed_wContext(context: str, key: str) -> int:
     h.update(key.encode())
     h.update(context.encode('utf-8'))
     return int.from_bytes(h.digest(), "big") % (2**31-1) 
+
+def count_double_WPs(text:str) -> int:
+    """
+    Counts how many Double Whitespaces a text contains.
+    """
+    wp_count = 0
+    split_tokens = re.findall(r"\S+|\s+", text)
+    for token in split_tokens:
+        if len(token) == 2 and token[0].isspace() and token[1].isspace():
+            wp_count += 1
+    return wp_count 
+
 
 # ---------- Encoder ----------
 def encode_whitespace_watermark(text: str, key: str, gamma: float = 0.5, contextFunktion: bool = False) -> str:
@@ -58,7 +68,6 @@ def encode_whitespace_watermark(text: str, key: str, gamma: float = 0.5, context
         return text
 
     sel = prng_indices(len(gaps), gamma, key, text, contextFunktion) # Auswahl in Gap-Indexraum 0..len(gaps)-1
-    print(sel)
     for j, ws_idx in enumerate(gaps):
         if j in sel:
             # mind. zwei Leerzeichen (behalte Newlines bei, erweitere ansonsten auf "  ")
@@ -86,7 +95,7 @@ def detect_whitespace_watermark(text: str, key: str, gamma: float = 0.5, context
     if n == 0:
         return {"n": 0, "k": 0, "z": 0.0, "p_value": 1.0, "rate": 0.0}
 
-    sel = prng_indices(n, gamma, key, contextFunktion)
+    sel = prng_indices(n, gamma, key, text, contextFunktion)
 
     k = 0
     for j, ws_idx in enumerate(gaps):
@@ -103,6 +112,9 @@ def detect_whitespace_watermark(text: str, key: str, gamma: float = 0.5, context
 
     return {"n": n, "k": k, "z": z, "p_value": p, "rate": k / n}
 
+def detect_np_type(object_np, key):
+    return detect_whitespace_watermark(object_np[1], key, gamma=0.5, contextFunktion=True)
+
 # ---------- Mini-Demo ----------
 if __name__ == "__main__":
     key = "super-secret"
@@ -113,6 +125,9 @@ if __name__ == "__main__":
     print("WATERMARKED:\n", wm)
 
     nonAIExmp = "Dies  ist ein  Text der nicht KI generiert  ist und deswegen nur ein Whitespace-Block mit  2 leerzeichen hat."
-    #res = detect_whitespace_watermark(nonAIExmp, key, gamma=0.2)
-    #print("\nDETECTION:", res)
+    res = detect_whitespace_watermark(nonAIExmp, key, gamma=0.2)
+    print("\nDETECTION:", res)
     # Daumenregel: z > 4 (oder p < 1e-4) => starkes Indiz für vorhandenes Watermark
+
+    print("#Testing Count_DOUBLE_WP")
+    print(count_double_WPs("This is a text with  2  wp."))
