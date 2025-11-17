@@ -1,7 +1,7 @@
 import re
 import random
 import torch
-import model as MyModel
+import semantic_model as MyModel
 
 from datasets import load_dataset
 

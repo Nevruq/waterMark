@@ -1,23 +1,28 @@
 from transformers import BertTokenizer, BertModel
 import torch
-import model as MyModel
+import semantic_model as MyModel
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# BERT laden – muss derselbe sein wie beim Training!
-bert_name = "bert-base-uncased"
-tokenizer = BertTokenizer.from_pretrained(bert_name)
-bert = BertModel.from_pretrained(bert_name).to(device)
-bert.eval()
+# DEPRECATED !!!!!!!!!!!!!!!!!
 
-# Dein SemanticModel + Gewichte laden
-semantic_model = MyModel.SemanticModel().to(device)
-state = torch.load("model/semantic_mapping_model.pth", map_location=device)
-if isinstance(state, dict) and "model_state_dict" in state:
-    semantic_model.load_state_dict(state["model_state_dict"])
-else:
-    semantic_model.load_state_dict(state)
-semantic_model.eval()
+
+def load_semantic_props():
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    # BERT laden – muss derselbe sein wie beim Training!
+    bert_name = "bert-base-uncased"
+    tokenizer = BertTokenizer.from_pretrained(bert_name)
+    bert = BertModel.from_pretrained(bert_name).to(device)
+    bert.eval()
+
+    # Dein SemanticModel + Gewichte laden
+    semantic_model = MyModel.SemanticModel().to(device)
+    state = torch.load("model/semantic_mapping_model.pth", map_location=device)
+    if isinstance(state, dict) and "model_state_dict" in state:
+        semantic_model.load_state_dict(state["model_state_dict"])
+    else:
+        semantic_model.load_state_dict(state)
+    semantic_model.eval()
 
 def encode_text(text: str):
     enc = tokenizer(text, return_tensors="pt", padding=True, truncation=True).to(device)
@@ -34,7 +39,6 @@ def calc_cos_sim(input1, input2):
     return cos(encode_text(input1), encode_text(input2))
 
 def calc_euclid_distance(input1, input2):
-    return torch.cdist(encode_text(input1), encode_text(input2))
 
 
 if __name__ == "__main__":

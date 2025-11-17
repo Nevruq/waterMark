@@ -13,7 +13,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-import testingLogitsOutput as tlo
+import watermark as tlo
 
 
 def ClassifierWhiteSpace():
@@ -68,7 +68,7 @@ class ClassifierLogitsManu():
         res = self.exam_text(text, green_frac=green_frac)
         z_score = res["z_score"]
         #T ≈ 3 → eher sensibel
-        if z_score > 3.0 and hit_rate > 0.55 and N > 20:
+        if z_score > 3.0 and N > 20:
             return True
         else:
             return False
@@ -114,11 +114,69 @@ class ClassifierLogitsManu():
             "p_value": p_value,
         }
     
-    def train_classifier(self):
-        df = pd.read_csv("logit_watermarked_set.csv")
+    def train_classifier_jsonl(self, path, class_weight="balanced", save_to=None):
+    # 1) JSONL laden
+        df = pd.read_json(path)
+
+        # 2) Label robust erstellen (True/False oder "true"/"false")
+        if df["is_watermarked_true"].dtype == bool:
+            df["label"] = df["is_watermarked_true"].astype(int)
+        else:
+            df["label"] = (
+                df["is_watermarked_true"]
+                .astype(str).str.strip().str.lower()
+                .map({"true": 1, "false": 0})
+            )
+
+        # 3) benötigte Numerik-Spalten sicher in float konvertieren
+        num_cols = ["green_hits", "tokens_checked", "z_score", "p_value", "tokens_length"]
+        for c in num_cols:
+            df[c] = pd.to_numeric(df[c], errors="coerce")
+
+        # 4) Features ableiten
+        df["hit_rate"] = df["green_hits"] / df["tokens_checked"].clip(lower=1)
+
+        feature_cols = ["z_score", "p_value", "hit_rate", "tokens_length", "tokens_checked"]
+
+        # 5) Zeilen mit fehlenden Werten verwerfen (nur was wir brauchen)
+        df = df.dropna(subset=feature_cols + ["label"]).reset_index(drop=True)
+
+        X = df[feature_cols]
+        y = df["label"].astype(int)
+
+        # 6) Split + Pipeline (Skalierung + LogReg)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42, stratify=y
+        )
+
+        clf = make_pipeline(
+            StandardScaler(),
+            LogisticRegression(max_iter=2000, class_weight=class_weight) 
+        )
+
+        clf.fit(X_train, y_train)
+
+        # 7) Evaluation
+        y_pred = clf.predict(X_test)
+        y_prob = clf.predict_proba(X_test)[:, 1]
+
+        print("Confusion matrix:")
+        print(confusion_matrix(y_test, y_pred))
+        print("\nReport:")
+        print(classification_report(y_test, y_pred, digits=3))
+        print("ROC-AUC:", roc_auc_score(y_test, y_prob))
+
+        return clf, feature_cols
+
+
+
+    def train_classifier_csv(self, path):  
+        df = pd.read_csv(path)
 
         # 2. Label vorbereiten
         # falls 'True'/'False' als Strings drinstehen:
+
+
         df["label"] = df["is_watermarked_true"].astype(int)  # oder .map({"True":1, "False":0})
 
         # 3. Zusätzliche Features berechnen

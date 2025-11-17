@@ -50,3 +50,38 @@ Idee: Logits die Werte sehr nah beiander sind -> Synonymen ??
     - Wenn ja könnte durch wahl des ersten oder anderen eventuell ein binärer Code eingebettet werden, jedoch muss immer das gleiche Modell benutzt werden
         -Unwahrscheinlich, gleiche Logits sind nicht Synonyme
     - Veränderung des Textes um semantische Intakthaltung zu erhalten cosine_similarity > 0.9
+
+
+
+Ergebnisse:
+    Gamma = 1:
+    -> ROC AUC ~ 0.54
+
+    Autoregression angepasst 
+    - Mit einem Datensatz von ~400 
+    - Gamma=3, Green_frac=.5
+    -> AUC ROC ~ 0.97
+
+
+
+TODO
+-implementiere zweite Funktion
+    + Addieren des Semantischen Emebdding Spaces
+    + Verändere Tokens entsprechend starker Entropie Räume
+    + Lasse Anfange unerändert (Von vorteil für Semantisches Model und Logik)
+
+- Code Aufräumen
+- Mehr auf mich anpassen
+- Stellen kommentieren
+- Schreibe in JSON in Datenset Attribute, wie (Key, Grenc_frac)
+
+- Vergleiche Semantic des vorherigen Textes, mit dem Watermarked
+    -> Analysiere Unterschiede
+
+- Überlegen was noch möglich
+- Präsentation für Mehler
+
+Verbesserungsmöglichkeiten:
+    - Watermarking erst nach bestimmter Anzahl an Entropie einbinden
+        -> Text bleibt ähnlich zum Original
+        -> Watermarking nur einbinden, in Passagen in denen hohe Entropie liegt
