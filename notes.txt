@@ -34,6 +34,7 @@ Ein gutes Watermark balanciert:
 
     - Transparenz ↔ Datenschutz
 
+    - Quasi 0% FPR (False-Positive-Rate)
 
 H. Zhang et al. (2025): Formalisierung als Hypothesentest mit klarer Aussage:
 → Jedes Watermark hat ein Dilemma:

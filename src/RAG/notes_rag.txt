@@ -1,0 +1,11 @@
+1. Texte (mit Watermark) → Embeddings
+
+2. Embeddings + Text + Metadaten → Vektordatenbank
+
+3. Zur Query-Zeit: Frage einbetten → similarity_search → Top-k Chunks → in den Prompt packen → GPT-2 antworten lassen
+
+4. Danach Detektor drüberlaufen lassen
+
+
+Wunschfunktion für Watermarking von Antworten auf bestimmte Prompts:
+    - Bestimmte Smenatische Prompts lösen ein RAG aus, welches Watermarked Output generiert

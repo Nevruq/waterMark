@@ -117,6 +117,7 @@ class ClassifierLogitsManu():
     def train_classifier_jsonl(self, path, class_weight="balanced", save_to=None):
     # 1) JSONL laden
         df = pd.read_json(path)
+        print(df)
 
         # 2) Label robust erstellen (True/False oder "true"/"false")
         if df["is_watermarked_true"].dtype == bool:
@@ -136,12 +137,13 @@ class ClassifierLogitsManu():
         # 4) Features ableiten
         df["hit_rate"] = df["green_hits"] / df["tokens_checked"].clip(lower=1)
 
-        feature_cols = ["z_score", "p_value", "hit_rate", "tokens_length", "tokens_checked"]
+        feature_cols = ["z_score", "p_value", "hit_rate", "tokens_checked"]
 
         # 5) Zeilen mit fehlenden Werten verwerfen (nur was wir brauchen)
         df = df.dropna(subset=feature_cols + ["label"]).reset_index(drop=True)
 
         X = df[feature_cols]
+        print(X)
         y = df["label"].astype(int)
 
         # 6) Split + Pipeline (Skalierung + LogReg)
@@ -187,7 +189,6 @@ class ClassifierLogitsManu():
             "z_score",
             "p_value",
             "hit_rate",
-            "tokens_length",
             "tokens_checked",
         ]
 

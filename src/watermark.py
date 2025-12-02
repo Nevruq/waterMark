@@ -87,7 +87,14 @@ def watermark_Sequence(text, model, tokenizer, key,
     Watermarkt nur in Sektionen in denen eine hohe Entropie herrscht. Verhindert wilkürliche Ersetzung von Tokens.
     Zudem berücksichte, dass der Anfang der Sequenz nicht verändert werden soll.
     """
-    
+    # Init Semantic Model 
+    sm = semantic_model.SemanticModel()
+    sm.load_semantic_probs()
+    mapping_list = sm.build_mapping_list()
+
+    mapping_list = mapping_list.to(device)
+    mapping_norm = mapping_list / (mapping_list.norm(dim=-1, keepdim=True) + 1e-12)
+
     device = next(model.parameters()).device
     enc = tokenizer(text, return_tensors="pt", max_length=1024)
     input_ids = enc.input_ids.to(device)  
@@ -131,12 +138,19 @@ def watermark_Sequence(text, model, tokenizer, key,
                 continue
 
             # Semantik Vector berechnen
-            prev_ids = ids[0, :i] 
-            sm = semantic_model().load_semantic_probs()
-            sm.model               
+            prev_ids = ids[0, :i]
+            text_org_token = tokenizer.decode(prev_ids)
+            print(text_org_token)
+
+            # Anstatt einer Random green List via Hash wird nun eine mit dem Semantic Model generiert
+            tokens_semantic = sm.encode_text(text_org_token) 
+            boosted_logits = mapping_list @ torch.transpose(tokens_semantic, 0, 1)   # [35678, 387] @ [387, 1] = [35678, 1]
+            boosted_logits = torch.transpose(boosted_logits, 0, 1)
+            topk = torch.topk(boosted_logits, k=top_k)
+            print(topk)
 
             # 3) Green-Entscheidung nur auf Top-k (schneller & natürlich)
-            topk = torch.topk(step_logits, k=top_k)
+            
             cand_ids = topk.indices.tolist()
             prefix = ids[0, :i].tolist()
             green_top = [tid for tid in cand_ids if is_green(tid, prefix, key, green_frac)]
@@ -299,13 +313,6 @@ def watermark_datafolder_json(model, tokenizer, key, dataset,
         f.close()
 
 
-def compare_semantic(dataset_1, dataset_2, model):
-    s_model = semantic_model()
-
-    
-
-
-
 
 # Beispiel: Nehme letzten token von Satz und passe ihn um einen Wert Delta an, wenn er höher als eine Entropie von z.B. 8 hat.
 # Cosine Sim von 0.95 beschreibt in der Regel das gleiche
@@ -314,21 +321,46 @@ if __name__ == "__main__":
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     key = "super-secret-key"
-
+    """
     model_name = "gpt2"  # kleines Messmodell
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(model_name).to(device)
     model.eval()
 
-    df = ldh.load_datasetw()["train"]["human_answers"][471:]
+    #df = ldh.load_datasetw()["train"]["human_answers"][471:]
 
-    watermark_datafolder_json(model, tokenizer, key, df, gamma=3)
+    #watermark_datafolder_json(model, tokenizer, key, df, gamma=3)
 
 
     
-    #BC = bc.ClassifierLogitsManu(model, key, tokenizer)
+    BC = bc.ClassifierLogitsManu(model, key, tokenizer)
     
-    #BC.train_classifier_jsonl("concat_set.jsonl")
+    clf, feature_cols = BC.train_classifier_jsonl("src/data/concat_set.jsonl")
+
+    import RAG.rag_answers as rag
+    import numpy as np
+    prompt_output = rag.answer("Give me a simple hello world in java")
+    print(prompt_output)
+    features_dWatermark = detect_watermark(prompt_output, tokenizer, key)
+
+    z = features_dWatermark["z_score"]
+    p = features_dWatermark["p_value"]
+    hit_rate = features_dWatermark["green_hits"] / features_dWatermark["tokens_checked"]
+    tokens_checked = features_dWatermark["tokens_checked"]
+
+    feature_cols = ["z_score", "p_value", "hit_rate", "tokens_checked"]  # wie im Training
+
+    X_new = pd.DataFrame(
+        [[z, p, hit_rate, tokens_checked]],
+        columns=feature_cols
+    )
+
+    print("Columns von X_new:", X_new.columns)
+    print("Feature-Cols:", feature_cols)
+
+    print("Prediction:", clf.predict(X_new))
+    """
+
     
 
 

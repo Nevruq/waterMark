@@ -1,6 +1,7 @@
 import re
 import random
 import torch
+import pandas as pd
 import semantic_model as MyModel
 
 from datasets import load_dataset
@@ -22,25 +23,11 @@ def count_double_WP(testData):
                 wp_count += 1
     return wp_count 
 
-def load_semantic_model():
-    # load the model in /Bachelor/RetrospectiveDetection/model/semantic_mapping_model.pth
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    model = MyModel.SemanticModel().to(device)
-
-    state = torch.load("model/semantic_mapping_model.pth", map_location=device)
-
-    # Falls sie als {"model_state_dict": ...} gespeichert wurde:
-    if isinstance(state, dict) and "model_state_dict" in state:
-        model.load_state_dict(state["model_state_dict"])
-    else:
-        # direktes state_dict
-        model.load_state_dict(state)
-
-    model.eval()
-    return model
+def load_jsonl(path):
+    df = pd.read_json(path)
+    return df
 
 if __name__ == "__main__":
-    load_semantic_model()
+    load_jsonl("src/data/concat_set.jsonl")
     #print(count_double_WP(load_datasetw()["train"]["human_answers"]) / 3933)
     
